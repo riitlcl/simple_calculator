@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:math';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(MyApp());
@@ -26,11 +28,37 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  late int firstnum;
-  late int secondnum;
+  late final int firstnum;
+  late final int secondnum;
   String texttodisplay = '';
-  late String res;
+  late final String res;
   late String operatortoperform;
+  late SharedPreferences prefs;
+
+  String cdate2 = DateFormat("MMMM, dd, yyyy").format(DateTime.now());
+  String tdata = DateFormat("HH:mm").format(DateTime.now());
+
+
+  SharedPreferences? preferences;
+
+
+
+  @override
+  void initState() {
+    super.initState();
+    initializePreference().whenComplete((){
+      setState(() {});
+    });
+  }
+
+  Future<void> initializePreference() async{
+    this.preferences = await SharedPreferences.getInstance();
+    this.preferences?.setString("date", cdate2 + " " + tdata);
+    this.preferences?.setInt("firstnum", firstnum);
+    this.preferences?.setInt("secondnum", secondnum);
+    this.preferences?.setString("res", res);
+    this.preferences?.setString("btnvalue", operatortoperform);
+  }
 
   void btnclicked(String btnvalue) {
     if (btnvalue == 'C') {
@@ -55,6 +83,11 @@ class _MyHomePageState extends State<MyHomePage> {
         Navigator.push(
             context,
             MaterialPageRoute(builder: (context) =>  SecondRoute()));
+      }
+      if (operatortoperform == 'HSTR') {
+        Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) =>  ThirdRoute()));
       }
       if (operatortoperform == '^') {
         res = (pow(firstnum, secondnum)).toString();
@@ -128,7 +161,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(
               children: <Widget>[
                 custombutton('...'),
-                custombutton('...'),
+                custombutton('HSTR'),
                 custombutton('Con'),
                 custombutton('^'),
               ],
@@ -170,7 +203,10 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+
+  storingHistory() {}
 }
+
 
 class SecondRoute extends StatefulWidget  {
   @override
@@ -181,16 +217,12 @@ class _SecondRoute extends State<SecondRoute> {
     color: Colors.black87,
   );
 
-  final TextStyle labelStyle = TextStyle(
-    fontSize: 20,
-    color: Colors.black,
-  );
-
-
   late String _startMeasure;
   late String _convertedMeasure;
   late double _numberForm;
   late String _resultMessage;
+
+  get labelStyle => null;
 
   void initState() {
     _numberForm = 0;
@@ -337,3 +369,47 @@ class _SecondRoute extends State<SecondRoute> {
     );
   }
 }
+
+class ThirdRoute extends StatefulWidget  {
+
+
+  @override
+  _ThirdRoute createState() => _ThirdRoute();}
+
+class _ThirdRoute extends State<ThirdRoute> {
+  final TextStyle inputStyle = TextStyle(
+    fontSize: 18,
+    color: Colors.black87,
+  );
+  final TextStyle labelStyle = TextStyle(
+    fontSize: 20,
+    color: Colors.black,
+  );
+
+  get preferences => null;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+        title: const Text("History"),
+    ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              '${this.preferences?.getInt('firstnum') ?? 0} ${this.preferences?.getString('btnvalu') ?? 0} ${this.preferences?.getInt('secondnum') ?? 0} = ${this.preferences?.getString('res') ?? 0}',
+              style: Theme.of(context).textTheme.headline4,
+            ),
+            Text(
+              '\n \n ${this.preferences?.getString("date")}',
+            ),
+          ],
+        ),
+      ),
+      // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}
+
