@@ -1,10 +1,17 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/ui/firebase_animated_list.dart';
 
-void main() {
+
+Future<void> main() async{
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp());
 }
 
@@ -25,40 +32,19 @@ class MyHomePage extends StatefulWidget {
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
+late final int firstnum;
+late final int secondnum;
+String texttodisplay = '';
+late final String res;
+late String operatortoperform;
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  late final int firstnum;
-  late final int secondnum;
-  String texttodisplay = '';
-  late final String res;
-  late String operatortoperform;
-  late SharedPreferences prefs;
-
-  String cdate2 = DateFormat("MMMM, dd, yyyy").format(DateTime.now());
-  String tdata = DateFormat("HH:mm").format(DateTime.now());
-
-
-  SharedPreferences? preferences;
-
-
-
-  @override
-  void initState() {
-    super.initState();
-    initializePreference().whenComplete((){
-      setState(() {});
-    });
-  }
-
-  Future<void> initializePreference() async{
-    this.preferences = await SharedPreferences.getInstance();
-    this.preferences?.setString("date", cdate2 + " " + tdata);
-    this.preferences?.setInt("firstnum", firstnum);
-    this.preferences?.setInt("secondnum", secondnum);
-    this.preferences?.setString("res", res);
-    this.preferences?.setString("btnvalue", operatortoperform);
-  }
+  //ate final int firstnum;
+  //late final int secondnum;
+  //String texttodisplay = '';
+  //late final String res;
+  //late String operatortoperform;
 
   void btnclicked(String btnvalue) {
     if (btnvalue == 'C') {
@@ -83,6 +69,11 @@ class _MyHomePageState extends State<MyHomePage> {
         Navigator.push(
             context,
             MaterialPageRoute(builder: (context) =>  SecondRoute()));
+      }
+      if (operatortoperform == 'FireB') {
+        Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) =>  ForthRoute()));
       }
       if (operatortoperform == 'HSTR') {
         Navigator.push(
@@ -160,7 +151,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Row(
               children: <Widget>[
-                custombutton('...'),
+                custombutton('FireB'),
                 custombutton('HSTR'),
                 custombutton('Con'),
                 custombutton('^'),
@@ -204,7 +195,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  storingHistory() {}
 }
 
 
@@ -370,6 +360,9 @@ class _SecondRoute extends State<SecondRoute> {
   }
 }
 
+String cdate2 = DateFormat("MMMM, dd, yyyy").format(DateTime.now());
+String tdata = DateFormat("HH:mm").format(DateTime.now());
+
 class ThirdRoute extends StatefulWidget  {
 
 
@@ -386,14 +379,34 @@ class _ThirdRoute extends State<ThirdRoute> {
     color: Colors.black,
   );
 
-  get preferences => null;
+
+
+  SharedPreferences? preferences;
+
+  @override
+  void initState() {
+    super.initState();
+    initializePreference().whenComplete((){
+      setState(() {});
+    });
+  }
+
+  Future<void> initializePreference() async{
+    this.preferences = await SharedPreferences.getInstance();
+    this.preferences?.setString("date", cdate2 + " " + tdata);
+    this.preferences?.setInt("firstnum", firstnum);
+    this.preferences?.setInt("secondnum", secondnum);
+    this.preferences?.setString("res", res);
+    this.preferences?.setString("btnvalue", operatortoperform);
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
+      appBar: AppBar(
         title: const Text("History"),
-    ),
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -412,4 +425,110 @@ class _ThirdRoute extends State<ThirdRoute> {
     );
   }
 }
+
+
+
+
+class ForthRoute extends StatefulWidget  {
+
+  @override
+  _ForthRoute createState() => _ForthRoute();
+}
+
+class _ForthRoute extends State<ForthRoute> {
+
+  var url = "https://mainor-calc-default-rtdb.europe-west1.firebasedatabase.app/" +
+      "data.json";
+  final TextStyle inputStyle = TextStyle(
+    fontSize: 18,
+    color: Colors.black87,
+  );
+  final TextStyle labelStyle = TextStyle(
+    fontSize: 20,
+    color: Colors.black,
+  );
+
+  final _form = GlobalKey<FormState>();
+ // late String title;
+
+  void writeData() async {
+    _form.currentState!.save();
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        body: json.encode({"data": cdate2}),
+      );
+    }
+    catch (error) {
+      throw error;
+    }
+  }
+
+  void initState() {
+    super.initState();
+    readData();
+  }
+
+  bool isLoading = true;
+  List<String> list = [];
+
+  Future<void> readData() async {
+    try {
+      final response = await http.get(Uri.parse(url));
+      final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      if (extractedData == null) {
+        return;
+      }
+      extractedData.forEach((blogId, blogData) {
+        list.add(blogData["data"]);
+      });
+      setState(() {
+        isLoading = false;
+      });
+    } catch (error) {
+      throw error;
+    }
+    @override
+    Widget build(BuildContext context) {
+      return MaterialApp(
+          title: 'FireBase',
+          theme: ThemeData(
+            primarySwatch: Colors.green,
+          ),
+          home: Scaffold(
+              appBar: AppBar(
+                title: Text("Testing"),
+              ),
+              body: isLoading
+                  ? CircularProgressIndicator()
+                  : ListView.builder(
+                  padding: const EdgeInsets.all(8),
+                  itemCount: list.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return Container(
+                        height: 50,
+                        child: Center(
+                          child: Text(
+                            list[index],
+                            style: TextStyle(color: Colors.green),
+                          ),
+                        )
+                    );
+                  }
+              )
+          )
+      );
+    }
+  }
+
+
+}
+
+
+
+
+
+
+
 
