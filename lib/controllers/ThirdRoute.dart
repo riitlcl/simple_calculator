@@ -14,7 +14,7 @@ class ThirdRoute extends StatefulWidget  {
 class _ThirdRoute extends State<ThirdRoute> {
   final TextStyle inputStyle = TextStyle(
     fontSize: 18,
-    color: Colors.black87,
+    color: Colors.deepOrange,
   );
   final TextStyle labelStyle = TextStyle(
     fontSize: 20,

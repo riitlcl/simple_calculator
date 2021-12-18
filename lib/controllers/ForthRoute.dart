@@ -16,7 +16,7 @@ class _ForthRoute extends State<ForthRoute> {
   var url = "";
   final TextStyle inputStyle = TextStyle(
     fontSize: 18,
-    color: Colors.black87,
+    color: Colors.pink,
   );
   final TextStyle labelStyle = TextStyle(
     fontSize: 20,

@@ -8,7 +8,7 @@ class SecondRoute extends StatefulWidget  {
 class _SecondRoute extends State<SecondRoute> {
   final TextStyle inputStyle = TextStyle(
     fontSize: 18,
-    color: Colors.black87,
+    color: Colors.green,
   );
 
   late String _startMeasure;
